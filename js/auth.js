@@ -4,7 +4,7 @@
 //  SERVER AUTH — uses /api/* endpoints
 // ─────────────────────────────────────────
 let currentUser = null;
-const API = ''; // same origin
+const API = 'http://n1.delonix.one:8004'; // Python server
 
 function saveSession(user){ sessionStorage.setItem('ba_user', JSON.stringify(user)); }
 function loadSession(){ return JSON.parse(sessionStorage.getItem('ba_user')||'null'); }
