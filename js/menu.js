@@ -223,7 +223,7 @@ async function buildRanking(){
   list.innerHTML = '<div style="text-align:center;padding:1rem;color:#556">Загрузка...</div>';
   let players = [];
   try {
-    const r = await fetch('http://n1.delonix.one:8004/api/leaderboard');
+    const r = await fetch('/api/leaderboard');
     players = await r.json();
   } catch(e) {
     // Fallback: show only current user
