@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BRAWL ARENA — SHOWDOWN</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Lilita+One&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet" href="css/menu.css">
+<link rel="stylesheet" href="css/game.css">
+<link rel="stylesheet" href="css/hud.css">
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="screen-auth">
+  <div class="auth-bg">
+    <div class="auth-stars"></div>
+    <div class="auth-glow"></div>
+  </div>
+  <div class="auth-box">
+    <div class="auth-logo">⚡ BRAWL ARENA</div>
+    <div class="auth-tabs">
+      <button class="atab on" id="tab-login" onclick="authTab('login')">ВОЙТИ</button>
+      <button class="atab" id="tab-reg" onclick="authTab('reg')">РЕГИСТРАЦИЯ</button>
+    </div>
+    <div id="auth-login">
+      <input class="auth-input" id="login-name" type="text" placeholder="Имя игрока" maxlength="16">
+      <input class="auth-input" id="login-pass" type="password" placeholder="Пароль">
+      <div class="auth-err" id="login-err"></div>
+      <button class="auth-btn" onclick="doLogin()">▶ ВОЙТИ</button>
+      <button class="auth-btn-ghost" onclick="doGuest()">Играть без аккаунта</button>
+    </div>
+    <div id="auth-reg" style="display:none">
+      <input class="auth-input" id="reg-name" type="text" placeholder="Имя игрока (макс 16)" maxlength="16">
+      <input class="auth-input" id="reg-pass" type="password" placeholder="Пароль">
+      <input class="auth-input" id="reg-pass2" type="password" placeholder="Повторите пароль">
+      <div class="auth-err" id="reg-err"></div>
+      <button class="auth-btn" onclick="doRegister()">✔ СОЗДАТЬ АККАУНТ</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN MENU -->
+<div id="screen-menu" style="display:none">
+  <div class="menu-bg">
+    <div class="menu-bg-glow"></div>
+    <div class="menu-bg-stars"></div>
+  </div>
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="player-info" id="topbar-player">
+      <div class="player-avatar" id="topbar-avatar">🎮</div>
+      <div class="player-details">
+        <div class="player-name" id="topbar-name">Игрок</div>
+        <div class="player-rank">
+          <span class="trophy-icon">🏆</span>
+          <span id="topbar-trophies">0</span>
+        </div>
+      </div>
+    </div>
+    <div class="currency-bar">
+      <div class="currency"><span>⚡</span><span id="cur-gems">0</span></div>
+      <div class="currency"><span>🪙</span><span id="cur-coins">0</span></div>
+    </div>
+  </div>
+
+  <!-- Left sidebar -->
+  <div class="left-sidebar">
+    <div class="sidebar-btn" onclick="openTab('brawlers')">
+      <span class="sb-icon">💀</span>
+      <span>БОЙЦЫ</span>
+    </div>
+    <div class="sidebar-btn" onclick="openTab('shop')">
+      <span class="sb-icon">🛒</span>
+      <span>МАГАЗИН</span>
+    </div>
+    <div class="sidebar-btn" onclick="openTab('quests')">
+      <span class="sb-icon">📋</span>
+      <span>КВЕСТЫ</span>
+      <span class="notif-badge" id="quest-badge">2</span>
+    </div>
+    <div class="sidebar-btn" onclick="openTab('ranking')">
+      <span class="sb-icon">🏆</span>
+      <span>РЕЙТИНГ</span>
+    </div>
+    <div class="sidebar-btn danger" onclick="doLogout()">
+      <span class="sb-icon">🚪</span>
+      <span>ВЫЙТИ</span>
+    </div>
+  </div>
+
+  <!-- Center: Character preview -->
+  <div class="center-preview">
+    <div class="preview-stage">
+      <canvas id="menu-canvas"></canvas>
+      <div class="preview-char-name" id="prev-name">—</div>
+      <div class="preview-char-trophies">
+        <span>🏆</span><span id="prev-trophies">0</span>
+        <span class="prev-power-badge" id="prev-power">11</span>
+      </div>
+      <div class="preview-modifiers" id="prev-mods"></div>
+    </div>
+    <div class="preview-bottom-bar">
+      <button class="preview-action-btn" onclick="openBrawlers()">👕 СКИНЫ</button>
+      <button class="preview-select-btn" id="btn-select-brawler">✔ ВЫБРАТЬ</button>
+    </div>
+  </div>
+
+  <!-- Right sidebar -->
+  <div class="right-sidebar">
+    <div class="sidebar-btn right-btn" onclick="alert('Скоро!')">
+      <span>НОВОСТИ</span><span class="notif-badge">2</span>
+    </div>
+    <div class="sidebar-btn right-btn" onclick="alert('Скоро!')">
+      <span>ДРУЗЬЯ</span>
+    </div>
+    <div class="sidebar-btn right-btn" onclick="alert('Скоро!')">
+      <span>КЛУБ</span>
+    </div>
+  </div>
+
+  <!-- Bottom: Mode selector + Play -->
+  <div class="bottom-bar">
+    <div class="xp-bar-wrap">
+      <div class="xp-label">XP <span id="xp-cur">0</span>/<span id="xp-max">1000</span></div>
+      <div class="xp-track"><div class="xp-fill" id="xp-fill"></div></div>
+    </div>
+    <div class="mode-selector">
+      <div class="mode-card active">
+        <div class="mode-icon">💀</div>
+        <div class="mode-name">ШОУДАУН</div>
+        <div class="mode-desc">Одиночное столкновение</div>
+        <div class="mode-map" id="mode-map-name">Карта: Лесные лилии</div>
+      </div>
+    </div>
+    <button class="play-btn" id="btn-play" onclick="startMatchmaking()">
+      <span class="play-text">ИГРАТЬ</span>
+    </button>
+  </div>
+
+  <!-- Overlays -->
+  <div class="overlay" id="overlay-brawlers" style="display:none">
+    <div class="overlay-panel">
+      <div class="overlay-header">
+        <span>ВЫБОР БОЙЦА</span>
+        <button class="close-btn" onclick="closeOverlay('overlay-brawlers')">✕</button>
+      </div>
+      <div class="brawler-class-tabs" id="brawler-tabs"></div>
+      <div class="brawler-grid" id="brawler-grid"></div>
+      <div class="brawler-detail" id="brawler-detail"></div>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay-quests" style="display:none">
+    <div class="overlay-panel">
+      <div class="overlay-header"><span>КВЕСТЫ</span><button class="close-btn" onclick="closeOverlay('overlay-quests')">✕</button></div>
+      <div id="quest-list"></div>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay-ranking" style="display:none">
+    <div class="overlay-panel">
+      <div class="overlay-header"><span>ТОП ИГРОКОВ</span><button class="close-btn" onclick="closeOverlay('overlay-ranking')">✕</button></div>
+      <div id="ranking-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MATCHMAKING SCREEN -->
+<div id="screen-matchmaking" style="display:none">
+  <div class="mm-bg"></div>
+  <div class="mm-box">
+    <div class="mm-title">ПОИСК МАТЧА</div>
+    <div class="mm-brawler-preview">
+      <canvas id="mm-canvas" width="180" height="220"></canvas>
+      <div class="mm-brawler-name" id="mm-brawler-name">—</div>
+    </div>
+    <div class="mm-players" id="mm-players">
+      <div class="mm-slot you-slot">
+        <div class="mm-slot-avatar" id="mm-my-avatar">🎮</div>
+        <div class="mm-slot-name" id="mm-my-name">Ты</div>
+      </div>
+      <!-- Other slots filled dynamically -->
+    </div>
+    <div class="mm-timer-ring">
+      <svg viewBox="0 0 80 80">
+        <circle class="mm-ring-bg" cx="40" cy="40" r="34"/>
+        <circle class="mm-ring-fill" id="mm-ring" cx="40" cy="40" r="34"/>
+      </svg>
+      <div class="mm-timer-text" id="mm-timer">30</div>
+    </div>
+    <div class="mm-status" id="mm-status">Ищем игроков...</div>
+    <button class="mm-cancel-btn" onclick="cancelMatchmaking()">ОТМЕНА</button>
+  </div>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="screen-game" style="display:none">
+  <canvas id="gameCanvas"></canvas>
+  <div id="hud" style="display:none">
+    <!-- Top left: player info -->
+    <div class="hud-tl">
+      <div class="hud-portrait-wrap">
+        <div class="hud-portrait" id="hud-portrait">🎮</div>
+        <div class="hud-name" id="hud-pname">Игрок</div>
+      </div>
+      <div class="hud-hp-wrap">
+        <div class="hud-hp-bar"><div class="hud-hp-fill" id="hp-fill"></div></div>
+        <div class="hud-hp-text"><span id="hp-cur">0</span>/<span id="hp-max">0</span></div>
+      </div>
+      <div class="hud-cubes-wrap">
+        <div class="cube-dot-row" id="cube-dots"></div>
+        <span class="cube-count-label">Кубы силы</span>
+      </div>
+    </div>
+
+    <!-- Top center -->
+    <div class="hud-tc">
+      <div class="players-left-box">
+        <div class="pl-number" id="players-left">10</div>
+        <div class="pl-label">Осталось бойцов</div>
+      </div>
+    </div>
+
+    <!-- Top right: zone timer -->
+    <div class="hud-tr">
+      <div class="zone-timer-box">
+        <div class="zone-timer-label">Безопасная зона</div>
+        <div class="zone-timer-val" id="zone-timer">2:30</div>
+        <div class="zone-warning" id="zone-warning"></div>
+      </div>
+    </div>
+
+    <!-- Super bar (bottom center) -->
+    <div class="hud-super">
+      <div class="super-bar-bg">
+        <div class="super-bar-fill" id="super-fill"></div>
+        <div class="super-bar-text" id="super-label">SUPER</div>
+      </div>
+    </div>
+
+    <!-- Bottom right: controls hint -->
+    <div class="hud-controls">
+      WASD — движение<br>
+      ЛКМ — атака<br>
+      SPACE/ПКМ — Супер
+    </div>
+
+    <!-- Danger vignette -->
+    <div id="vignette"></div>
+    <!-- Kill feed -->
+    <div id="killfeed"></div>
+    <!-- Announce -->
+    <div id="announce"></div>
+    <!-- Minimap -->
+    <canvas id="minimap" width="140" height="140"></canvas>
+  </div>
+</div>
+
+<!-- RESULTS SCREEN -->
+<div id="screen-results" style="display:none">
+  <div class="results-bg"></div>
+  <div class="results-box">
+    <div class="results-rank-banner" id="res-banner">
+      <div class="res-place-label">МЕСТО</div>
+      <div class="res-place-num" id="res-place">1</div>
+    </div>
+    <div class="results-brawler-preview">
+      <canvas id="res-canvas" width="160" height="200"></canvas>
+    </div>
+    <div class="results-trophies" id="res-trophies"></div>
+    <div class="results-stats" id="res-stats"></div>
+    <div class="results-btns">
+      <button class="res-btn-play" onclick="restartGame()">ИГРАТЬ СНОВА</button>
+      <button class="res-btn-next" onclick="backMenu()">ДАЛЕЕ</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script src="js/data.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/menu.js"></script>
+<script src="js/matchmaking.js"></script>
+<script src="js/arena.js"></script>
+<script src="js/entities.js"></script>
+<script src="js/projectiles.js"></script>
+<script src="js/particles.js"></script>
+<script src="js/hud.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
