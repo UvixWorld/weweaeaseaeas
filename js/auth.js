@@ -1,13 +1,11 @@
 'use strict';
 
-// ─────────────────────────────────────────
-//  SERVER AUTH — uses /api/* endpoints
-// ─────────────────────────────────────────
 let currentUser = null;
-const API = 'http://n1.delonix.one:8004'; // Python server
 
-function saveSession(user){ sessionStorage.setItem('ba_user', JSON.stringify(user)); }
-function loadSession(){ return JSON.parse(sessionStorage.getItem('ba_user')||'null'); }
+function saveSession(u){ localStorage.setItem('ba_user', JSON.stringify(u)); }
+function loadSession(){ return JSON.parse(localStorage.getItem('ba_user')||'null'); }
+function getAccounts(){ return JSON.parse(localStorage.getItem('ba_accounts')||'{}'); }
+function saveAccounts(a){ localStorage.setItem('ba_accounts', JSON.stringify(a)); }
 
 function authTab(tab){
   document.getElementById('tab-login').classList.toggle('on', tab==='login');
@@ -16,44 +14,47 @@ function authTab(tab){
   document.getElementById('auth-reg').style.display   = tab==='reg'  ?'':'none';
 }
 
-async function doRegister(){
+function doRegister(){
   const name  = document.getElementById('reg-name').value.trim();
   const pass  = document.getElementById('reg-pass').value;
   const pass2 = document.getElementById('reg-pass2').value;
   const err   = document.getElementById('reg-err');
   err.textContent = '';
+  if(name.length < 2 || name.length > 16){ err.textContent='Имя: 2–16 символов'; return; }
+  if(pass.length < 4){ err.textContent='Пароль минимум 4 символа'; return; }
   if(pass !== pass2){ err.textContent='Пароли не совпадают'; return; }
-  try {
-    const r = await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:name,password:pass})});
-    const d = await r.json();
-    if(!d.ok){ err.textContent = d.error||'Ошибка'; return; }
-    loginUser(d.user);
-  } catch(e){ err.textContent='Сервер недоступен'; }
+  const accs = getAccounts();
+  if(accs[name.toLowerCase()]){ err.textContent='Это имя уже занято'; return; }
+  const user = { name, trophies:0, coins:150, gems:20, xp:0, xpMax:1000, selectedChar:0,
+                 quests: generateQuests() };
+  accs[name.toLowerCase()] = { ...user, pw: btoa(pass) };
+  saveAccounts(accs);
+  loginUser(user);
 }
 
-async function doLogin(){
+function doLogin(){
   const name = document.getElementById('login-name').value.trim();
   const pass = document.getElementById('login-pass').value;
   const err  = document.getElementById('login-err');
   err.textContent = '';
-  try {
-    const r = await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:name,password:pass})});
-    const d = await r.json();
-    if(!d.ok){ err.textContent = d.error||'Ошибка'; return; }
-    loginUser(d.user);
-  } catch(e){ err.textContent='Сервер недоступен'; }
+  const accs = getAccounts();
+  const acc  = accs[name.toLowerCase()];
+  if(!acc){ err.textContent='Аккаунт не найден'; return; }
+  if(acc.pw !== btoa(pass)){ err.textContent='Неверный пароль'; return; }
+  loginUser(acc);
 }
 
-async function doGuest(){
-  const r = await fetch('/api/guest',{method:'POST'});
-  const d = await r.json();
-  if(d.ok) loginUser(d.user);
+function doGuest(){
+  const user = { name:'Гость_'+Math.floor(Math.random()*9999), trophies:0, coins:150,
+                 gems:20, xp:0, xpMax:1000, selectedChar:0, isGuest:true,
+                 quests: generateQuests() };
+  loginUser(user);
 }
 
 function doLogout(){
   saveCurrentUser();
   currentUser = null;
-  sessionStorage.removeItem('ba_user');
+  localStorage.removeItem('ba_user');
   document.getElementById('screen-menu').style.display = 'none';
   document.getElementById('screen-auth').style.display = 'flex';
 }
@@ -67,40 +68,34 @@ function loginUser(user){
   updateTopbar();
 }
 
-setInterval(saveCurrentUser, 60000);
-
-async function saveCurrentUser(){
-  if(!currentUser||currentUser.isGuest) return;
-  try {
-    await fetch('/api/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(currentUser)});
-  } catch(e){}
+function saveCurrentUser(){
+  if(!currentUser) return;
+  saveSession(currentUser);
+  if(!currentUser.isGuest){
+    const accs = getAccounts();
+    if(accs[currentUser.name.toLowerCase()]){
+      accs[currentUser.name.toLowerCase()] = { ...accs[currentUser.name.toLowerCase()], ...currentUser };
+      saveAccounts(accs);
+    }
+  }
 }
 
-async function addTrophies(amount){
+function addTrophies(amount){
   if(!currentUser) return;
-  currentUser.trophies = Math.max(0,(currentUser.trophies||0)+amount);
-  currentUser.xp = Math.min(currentUser.xpMax,(currentUser.xp||0)+Math.abs(amount)*3);
-  saveSession(currentUser);
+  currentUser.trophies = Math.max(0, (currentUser.trophies||0) + amount);
+  currentUser.xp = Math.min(currentUser.xpMax, (currentUser.xp||0) + Math.abs(amount)*3);
+  saveCurrentUser();
   updateTopbar();
 }
 
-async function submitMatchResult(rank, kills, cubes, mapName){
-  if(!currentUser||currentUser.isGuest){
-    const delta = calcTrophyChange(rank,10);
-    addTrophies(delta);
-    return delta;
+function submitMatchResult(rank, kills, cubes, mapName){
+  const delta = calcTrophyChange(rank, 10);
+  addTrophies(delta);
+  if(currentUser && currentUser.quests){
+    if(rank===1) currentUser.quests.forEach(q=>{ if(q.id==='q1') q.progress=Math.min(q.target,q.progress+1); });
   }
-  try {
-    const r = await fetch('/api/match_result',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:currentUser.name,rank,kills,cubes,mapName})});
-    const d = await r.json();
-    if(d.user){ currentUser={...currentUser,...d.user}; saveSession(currentUser); }
-    updateTopbar();
-    return d.trophyChange||0;
-  } catch(e){
-    const delta = calcTrophyChange(rank,10);
-    addTrophies(delta);
-    return delta;
-  }
+  saveCurrentUser();
+  return delta;
 }
 
 function generateQuests(){
@@ -111,7 +106,14 @@ function generateQuests(){
   ];
 }
 
-(function(){
-  const saved = loadSession();
-  if(saved) loginUser(saved);
-})();
+function updateQuestProgress(type, amount){
+  if(!currentUser||!currentUser.quests) return;
+  currentUser.quests.forEach(q=>{
+    if(q.done) return;
+    if(type==='kills'&&q.id==='q2') q.progress=Math.min(q.target,q.progress+amount);
+    if(type==='cubes'&&q.id==='q3') q.progress=Math.min(q.target,q.progress+amount);
+  });
+}
+
+// Авто-логин
+(function(){ const s=loadSession(); if(s) loginUser(s); })();
