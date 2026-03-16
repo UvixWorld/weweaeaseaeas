@@ -1,0 +1,114 @@
+/* ===== RESET & BASE ===== */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --orange:#ff8c00;--orange2:#ff5500;--gold:#ffd700;--gold2:#ffaa00;
+  --purple:#9933ff;--purple2:#6600cc;
+  --green:#44cc44;--green2:#22aa22;
+  --red:#ff3333;--blue:#4488ff;
+  --bg:#0a0d1a;--card:#111827;--card2:#1a2035;
+  --border:rgba(255,255,255,.08);
+  --text:#ffffff;--text2:#8899bb;--text3:#556677;
+}
+html,body{height:100%;overflow:hidden;user-select:none}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Nunito',sans-serif;
+}
+
+/* ===== AUTH SCREEN ===== */
+#screen-auth{
+  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:100;
+  background:radial-gradient(ellipse 140% 100% at 50% 120%,#1a0830 0%,#050818 60%);
+}
+.auth-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.auth-glow{
+  position:absolute;bottom:-20%;left:50%;transform:translateX(-50%);
+  width:700px;height:400px;
+  background:radial-gradient(ellipse,rgba(153,51,255,.25) 0%,transparent 70%);
+}
+.auth-stars{position:absolute;inset:0;background-image:
+  radial-gradient(circle,rgba(255,255,255,.9) 1px,transparent 1px),
+  radial-gradient(circle,rgba(255,255,255,.6) 1px,transparent 1px),
+  radial-gradient(circle,rgba(255,255,255,.4) 1px,transparent 1px);
+  background-size:180px 180px,120px 120px,80px 80px;
+  background-position:0 0,40px 40px,20px 60px;animation:twinkle 4s infinite alternate;}
+@keyframes twinkle{0%{opacity:.6}100%{opacity:1}}
+
+.auth-box{
+  position:relative;z-index:2;
+  background:rgba(10,13,26,.92);
+  border:1px solid rgba(153,51,255,.3);
+  border-radius:24px;padding:2.5rem 2rem;
+  width:min(420px,95vw);
+  box-shadow:0 0 60px rgba(153,51,255,.2),0 20px 60px rgba(0,0,0,.7);
+  backdrop-filter:blur(20px);
+}
+.auth-logo{
+  font-family:'Lilita One',cursive;font-size:2rem;
+  background:linear-gradient(135deg,var(--orange),var(--gold));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  text-align:center;margin-bottom:1.5rem;
+  filter:drop-shadow(0 0 20px rgba(255,140,0,.4));letter-spacing:.05em;
+}
+.auth-tabs{display:flex;gap:.5rem;margin-bottom:1.5rem;background:rgba(255,255,255,.05);border-radius:12px;padding:.3rem}
+.atab{
+  flex:1;padding:.5rem;border:none;border-radius:8px;
+  background:transparent;color:var(--text2);
+  font-family:'Nunito',sans-serif;font-size:.85rem;font-weight:800;cursor:pointer;transition:all .2s;
+}
+.atab.on{background:linear-gradient(135deg,var(--purple2),var(--purple));color:#fff;box-shadow:0 2px 12px rgba(153,51,255,.4)}
+.auth-input{
+  display:block;width:100%;padding:.75rem 1rem;margin-bottom:.8rem;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  border-radius:10px;color:#fff;font-family:'Nunito',sans-serif;font-size:.9rem;font-weight:700;
+  outline:none;transition:border-color .2s;
+}
+.auth-input:focus{border-color:rgba(153,51,255,.6)}
+.auth-input::placeholder{color:rgba(255,255,255,.3)}
+.auth-err{color:#ff5555;font-size:.78rem;font-weight:700;margin-bottom:.6rem;min-height:1rem}
+.auth-btn{
+  display:block;width:100%;padding:.75rem;margin-bottom:.5rem;
+  background:linear-gradient(135deg,var(--orange),var(--orange2));
+  border:none;border-radius:12px;color:#fff;
+  font-family:'Lilita One',cursive;font-size:1rem;letter-spacing:.08em;
+  cursor:pointer;transition:all .2s;
+  box-shadow:0 4px 20px rgba(255,100,0,.4);
+}
+.auth-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(255,100,0,.55)}
+.auth-btn-ghost{
+  display:block;width:100%;padding:.55rem;
+  background:transparent;border:1px solid rgba(255,255,255,.15);
+  border-radius:10px;color:var(--text2);
+  font-family:'Nunito',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .2s;
+}
+.auth-btn-ghost:hover{border-color:rgba(255,255,255,.35);color:#fff}
+
+/* ===== OVERLAY ===== */
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.8);
+  display:flex;align-items:center;justify-content:center;
+  z-index:50;backdrop-filter:blur(6px);
+}
+.overlay-panel{
+  background:linear-gradient(180deg,#1a1f35 0%,#0f1428 100%);
+  border:1px solid rgba(255,255,255,.1);border-radius:20px;
+  width:min(900px,96vw);max-height:88vh;overflow:hidden;
+  display:flex;flex-direction:column;
+  box-shadow:0 20px 80px rgba(0,0,0,.8);
+}
+.overlay-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1rem 1.5rem;border-bottom:1px solid rgba(255,255,255,.08);
+  font-family:'Lilita One',cursive;font-size:1.1rem;color:var(--gold);letter-spacing:.08em;
+}
+.close-btn{
+  background:rgba(255,255,255,.08);border:none;border-radius:8px;
+  color:var(--text2);font-size:1rem;width:32px;height:32px;cursor:pointer;
+  transition:all .2s;display:flex;align-items:center;justify-content:center;
+}
+.close-btn:hover{background:rgba(255,80,80,.2);color:#ff5555}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:2px}
